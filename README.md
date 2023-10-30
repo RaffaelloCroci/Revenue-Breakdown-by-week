@@ -1,29 +1,2 @@
 # Revenue-Breakdown-by-week
 This query provides a breakdown of weekly revenues and allows for further expansion to include revenue calculations for other months.
-
--- Step 1: Calculate Weekly Revenues
-WITH Weekly_Revenues AS (
-    SELECT
-        SUM(bb.client_total_cost) AS weekly_total,
-        MOD((MOD(date_part('week', bb.datetime_started)::INTEGER, 53)::INTEGER
-            + MOD((SELECT MAX(date_part('week', booking_booking.datetime_started))
-                    FROM booking_booking)::INTEGER, 52))::INTEGER, 52) AS week_of_year
-    FROM
-        booking_booking bb
-    JOIN
-        job_jobrequest jj ON jj.id = bb.jobrequest_id
-    WHERE
-        bb.datetime_started >= '2021-01-01'
-        AND bb.status IN ('OK', 'NS', 'CA', 'UN')
-        AND jj.agency_id IN ('1')
-    GROUP BY
-        week_of_year
-)
-
--- Step 2: Calculate Revenue Breakdown by Month
-SELECT
-    (SELECT SUM(weekly_total) FROM Weekly_Revenues WHERE week_of_year IN (1, 2, 3, 4, 5)) AS Jan_Revenue,
-    (SELECT SUM(weekly_total) FROM Weekly_Revenues WHERE week_of_year IN (6, 7, 8, 9)) AS Feb_Revenue,
-    (SELECT SUM(weekly_total) FROM Weekly_Revenues WHERE week_of_year IN (10, 11, 12, 13)) AS March_Revenue
-    -- Add similar calculations for April, May, and other months
-
